@@ -1,0 +1,46 @@
+version: '3'
+
+vars:
+  BIN_DIR: ./bin
+
+tasks:
+  build:
+    desc: Build relay profiling server and load generator
+    deps:
+      - build:server
+      - build:load
+
+  build:server:
+    desc: Build profiled relay server with pprof
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -o {{.BIN_DIR}}/relay-profiledserver ./test/profiledserver
+
+  build:server:devcert:
+    desc: Build profiled relay server with devcert QUIC support
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -tags devcert -o {{.BIN_DIR}}/relay-profiledserver-devcert ./test/profiledserver
+
+  build:load:
+    desc: Build relay hot-path load generator
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -o {{.BIN_DIR}}/relay-load ./test/load
+
+  build:load:devcert:
+    desc: Build load generator with devcert QUIC support
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -tags devcert -o {{.BIN_DIR}}/relay-load-devcert ./test/load
+
+  build:quic:
+    desc: Build devcert binaries for QUIC profiling
+    deps:
+      - build:server:devcert
+      - build:load:devcert
+
+  clean:
+    desc: Remove profiling binaries
+    cmds:
+      - rm -f {{.BIN_DIR}}/relay-profiledserver {{.BIN_DIR}}/relay-profiledserver-devcert {{.BIN_DIR}}/relay-load {{.BIN_DIR}}/relay-load-devcert
